@@ -80,7 +80,7 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'autoplay_candidate.py') -Destin
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $package 'PROJECT-LICENSE.txt') -Force
 Copy-Item -LiteralPath (Join-Path $cache 'BepInEx-LICENSE.txt') -Destination $package -Force
 @"
-A=B 自动验证程序
+A2B_Assistant 使用说明
 
 双击 $distributionName，程序自动准备内置资源，选择起点后点击“开始自动验证”。
 从第一关、从当前关开始会重新验证已通过关卡；从首个未通过关卡开始只处理未通过关卡。
@@ -113,7 +113,7 @@ try {
 $bundleIdentity = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.Substring(0, 16).ToLowerInvariant()
 $bundleInfo = Join-Path $buildDirectory 'BundleInfo.cs'
 @"
-[assembly: System.Reflection.AssemblyTitle("A=B 自动验证")]
+[assembly: System.Reflection.AssemblyTitle("A2B_Assistant")]
 [assembly: System.Reflection.AssemblyVersion("$Version.0")]
 [assembly: System.Reflection.AssemblyFileVersion("$Version.0")]
 namespace A2BAutoplay.Bootstrap {

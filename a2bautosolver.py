@@ -1,4 +1,4 @@
-"""Command-line entry point for A2B Auto Solver."""
+"""Command-line solver entry point for A2B_Assistant."""
 
 from src.manager import main
 

@@ -29,7 +29,7 @@ namespace A2BAutoplay.Bootstrap
                     if (Mutex.TryOpenExisting("Local\\A2BAutoplay", out existing))
                     {
                         existing.Dispose();
-                        MessageBox.Show("程序已经运行，请使用已打开的窗口。", "A=B 自动验证");
+                        MessageBox.Show("程序已经运行，请使用已打开的窗口。", "A2B_Assistant");
                         return 0;
                     }
                 }
@@ -63,7 +63,7 @@ namespace A2BAutoplay.Bootstrap
             catch (Exception error)
             {
                 if (prepareOnly) Console.Error.WriteLine(error.Message);
-                else MessageBox.Show("无法准备或启动程序：\n" + error.Message, "A=B 自动验证", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else MessageBox.Show("无法准备或启动程序：\n" + error.Message, "A2B_Assistant", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return 1;
             }
         }

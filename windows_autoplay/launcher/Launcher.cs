@@ -22,7 +22,7 @@ namespace A2BAutoplay
             bool created;
             using (var instance = new Mutex(true, "Local\\A2BAutoplay", out created))
             {
-                if (!created) { MessageBox.Show("程序已经运行，请使用已打开的窗口。", "A=B 自动验证"); return; }
+                if (!created) { MessageBox.Show("程序已经运行，请使用已打开的窗口。", "A2B_Assistant"); return; }
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new LauncherForm(args));
@@ -57,7 +57,7 @@ namespace A2BAutoplay
             arguments = args;
             var configuredData = Environment.GetEnvironmentVariable("A2B_AUTOPLAY_DATA_DIRECTORY");
             dataRoot = String.IsNullOrWhiteSpace(configuredData) ? root : Path.GetFullPath(configuredData);
-            Text = "A=B 自动验证";
+            Text = "A2B_Assistant";
             ClientSize = new Size(920, 660);
             MinimumSize = new Size(760, 480);
             Font = new Font("Microsoft YaHei UI", 9F);
