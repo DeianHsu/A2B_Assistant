@@ -8,8 +8,8 @@ The repository contains six chapters, 47 puzzles, 126,626 input/output cases, an
 
 ## Quick start: Windows application
 
-1. Download the single-file `A2B-Autoplay.exe` when available in [Releases](https://github.com/DeianHsu/Game-A2B-auto-solver/releases/latest). Older releases use a ZIP package that must be extracted in full.
-2. Install A=B through Steam, then open `A2B-Autoplay.exe`.
+1. Download `A2B_Assistant_v0.2.0.exe` from [Releases](https://github.com/DeianHsu/Game-A2B-auto-solver/releases/latest) for 64-bit Windows.
+2. Install A=B through Steam, then double-click `A2B_Assistant_v0.2.0.exe`.
 3. Choose a starting point and click **开始自动验证**. Opening the launcher does not start a run.
 
 The single executable includes Python, its dependency, and the game bridge. On first launch it prepares resources automatically; later launches reuse the cache. There is no installation wizard or manual extraction. The launcher locates the game, deploys the bridge, and starts A=B when needed. If the game is running without the bridge, close it before starting the launcher workflow.
@@ -22,7 +22,7 @@ The single executable includes Python, its dependency, and the game bridge. On f
 
 For each puzzle, the launcher obtains an answer, opens the level, fills the editor, starts game validation, waits for the result, and returns to the level menu. Puzzle failures are logged and the next puzzle runs; loss of the bridge connection stops scheduling. Pause, resume, and stop controls are available.
 
-Game progress determines which puzzles are solved. It is separate from the accepted answers bundled with the solver. Resource caches live under `%LOCALAPPDATA%/A2B-Autoplay/runtime/`; settings, logs, and save backups live under `%LOCALAPPDATA%/A2B-Autoplay/data/`. Use **打开备份和日志** to open that directory. Updates preserve this data, and old portable-package backups are left in place. Automated runs do not modify the repository's owner-controlled `.solve` decisions.
+Game progress determines which puzzles are solved. It is separate from the accepted answers bundled with the solver. Resource caches live under `%LOCALAPPDATA%/A2B-Autoplay/runtime/`; settings, logs, and save backups live under `%LOCALAPPDATA%/A2B-Autoplay/data/`. Use **打开备份和日志** to open that directory. Updates preserve this data. Automated runs do not modify the repository's owner-controlled `.solve` decisions.
 
 **5-5 is slow:** the current multiplication program took **53 minutes 16 seconds** in one complete run on the development machine. The launcher already uses the game's fastest native mode and displays case progress and elapsed time. The multiplication algorithm has not been optimized in this fork.
 
@@ -32,7 +32,7 @@ Game progress determines which puzzles are solved. It is separate from the accep
 | --- | --- |
 | Desktop application | C#, .NET Framework, Windows Forms |
 | Game integration | BepInEx 5.4.23.5 plugin; tested with Unity 2020.3.26f1c1 / Mono |
-| Solver | Python 3.14; portable package uses CPython 3.14.0 |
+| Solver | Python 3.14; application embeds CPython 3.14.0 |
 | Rules | YAML loaded with PyYAML 6.0.3 |
 | Local communication | TCP on `127.0.0.1:17850`, one JSON request/response per line |
 | Puzzle and solution data | JSON `.a2b` inputs and `.solve` states |
@@ -88,9 +88,7 @@ On 64-bit Windows, with A=B installed, Python available, and the .NET Framework 
 .\tools\build_autoplay.ps1 -GameDirectory 'D:\Game\Steam\steamapps\common\A2B' -Python 'python'
 ```
 
-The script downloads pinned runtime dependencies, compiles the launcher and bridge using the locally installed game libraries, embeds the complete payload, and creates `dist/A2B-Autoplay.exe`. Game assemblies are not redistributed. Build caches, binary packages, local experiments, and generated verification documents stay out of Git.
-
-Focused scheduling, communication, candidate, and interface checks have passed, with several real-game integration checks completed. A new full 47-puzzle regression of the Windows extension has not been run.
+The script downloads pinned runtime dependencies, compiles the launcher and bridge using the locally installed game libraries, embeds the complete payload, and creates `dist/A2B_Assistant_v0.2.0.exe`. Set `-Version` to change the version in the filename and executable metadata. Game assemblies are not redistributed. Build caches, binary packages, local experiments, and generated verification documents stay out of Git.
 
 ## License
 

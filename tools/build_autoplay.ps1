@@ -9,6 +9,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $buildDirectory = Join-Path $projectRoot 'build\autoplay'
 $cache = Join-Path $buildDirectory 'vendor'
 $package = Join-Path $buildDirectory 'package\A2B-Autoplay'
+$distributionName = "A2B_Assistant_v$Version.exe"
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $gameLibraries = Join-Path $GameDirectory 'A2B_Data\Managed'
 if (!(Test-Path -LiteralPath $compiler)) { throw '未找到 .NET Framework C# 编译器。' }
@@ -78,23 +79,23 @@ foreach ($directory in @('src', 'test_data', 'test_output')) {
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'autoplay_candidate.py') -Destination (Join-Path $solver 'tools\autoplay_candidate.py') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $package 'PROJECT-LICENSE.txt') -Force
 Copy-Item -LiteralPath (Join-Path $cache 'BepInEx-LICENSE.txt') -Destination $package -Force
-@'
+@"
 A=B 自动验证程序
 
-双击单文件 A2B-Autoplay.exe，程序自动准备内置资源，选择起点后点击“开始自动验证”。
+双击 $distributionName，程序自动准备内置资源，选择起点后点击“开始自动验证”。
 从第一关、从当前关开始会重新验证已通过关卡；从首个未通过关卡开始只处理未通过关卡。
 从当前关开始时，请先在游戏里打开该关卡。
 
 程序自动查找游戏、部署桥接插件，优先使用已验证答案，缺少时调用随包提供的求解器。
 支持暂停、恢复和停止。失败会记录并继续；游戏退出或插件断开时停止调度。
 资源缓存位于 %LOCALAPPDATA%\A2B-Autoplay\runtime，设置、日志和存档备份位于其 data 目录。
-可在界面点击“打开备份和日志”查看用户数据。旧版便携目录中的存档备份和日志不被删除。
+可在界面点击“打开备份和日志”查看用户数据。
 
 5-5 的现有乘法答案运行较慢，本机一次实测约 53 分钟。程序显示用例进度及已用时间。
 游戏需通过 Steam 安装；首次部署时如游戏已打开，请先退出游戏。
 
 本程序使用 BepInEx、CPython、PyYAML，许可证随包提供。游戏本体不包含在发布包中。
-'@ | Set-Content -LiteralPath (Join-Path $package '使用说明.txt') -Encoding utf8
+"@ | Set-Content -LiteralPath (Join-Path $package '使用说明.txt') -Encoding utf8
 $archivePath = Join-Path $buildDirectory 'A2B-Autoplay.payload.zip'
 $archiveStream = [System.IO.File]::Open($archivePath, [System.IO.FileMode]::Create)
 $archive = [System.IO.Compression.ZipArchive]::new($archiveStream, [System.IO.Compression.ZipArchiveMode]::Create)
@@ -122,7 +123,7 @@ namespace A2BAutoplay.Bootstrap {
     }
 }
 "@ | Set-Content -LiteralPath $bundleInfo -Encoding utf8
-$singleFileOutput = Join-Path $projectRoot 'dist\A2B-Autoplay.exe'
+$singleFileOutput = Join-Path (Join-Path $projectRoot 'dist') $distributionName
 $bootstrap = Join-Path $projectRoot 'windows_autoplay\bootstrap'
 & $compiler /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Web.Extensions.dll /reference:System.IO.Compression.dll "/resource:$archivePath,A2BAutoplay.Bundle" "/out:$singleFileOutput" (Join-Path $bootstrap 'SingleFile.cs') (Join-Path $bootstrap 'BundleCache.cs') $bundleInfo
 if ($LASTEXITCODE -ne 0) { throw '单文件程序编译失败。' }

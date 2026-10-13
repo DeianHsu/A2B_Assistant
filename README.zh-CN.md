@@ -8,8 +8,8 @@
 
 ## 快速使用：Windows 程序
 
-1. 从[发布版本（Releases）](https://github.com/DeianHsu/Game-A2B-auto-solver/releases/latest)获取单文件版 `A2B-Autoplay.exe`；旧版 ZIP 发布包仍需完整解压。
-2. 通过 Steam 安装 A=B，然后打开 `A2B-Autoplay.exe`。
+1. 从[发布版本（Releases）](https://github.com/DeianHsu/Game-A2B-auto-solver/releases/latest)下载 `A2B_Assistant_v0.2.0.exe`，适用于 64 位 Windows。
+2. 通过 Steam 安装 A=B，然后双击 `A2B_Assistant_v0.2.0.exe`。
 3. 选择起点，点击“开始自动验证”。仅打开程序不会自动运行。
 
 单个程序文件已内嵌 Python、所需依赖和游戏插件。首次打开自动准备资源，后续复用缓存，无安装向导或手工解压步骤。启动器会查找游戏、部署插件并按需启动 A=B；首次部署时，如果游戏已运行且尚未加载插件，请先退出游戏。
@@ -22,7 +22,7 @@
 
 程序逐题获取答案、选关、填入代码、启动游戏验证，等待结果后返回选关界面。关卡失败时记录并继续下一关；插件断开或游戏退出时停止调度。支持暂停、恢复和停止。
 
-是否已通过以游戏存档为准，与求解器随包提供的已验收答案分开。资源缓存位于 `%LOCALAPPDATA%/A2B-Autoplay/runtime/`，设置、日志和存档备份独立保存在 `%LOCALAPPDATA%/A2B-Autoplay/data/`，可通过“打开备份和日志”按钮查看。更新程序保留这些数据，旧版便携目录的备份也不会被删除。自动运行不修改仓库 `.solve` 文件中的人工接受决定。
+是否已通过以游戏存档为准，与求解器随包提供的已验收答案分开。资源缓存位于 `%LOCALAPPDATA%/A2B-Autoplay/runtime/`，设置、日志和存档备份独立保存在 `%LOCALAPPDATA%/A2B-Autoplay/data/`，可通过“打开备份和日志”按钮查看。更新程序保留这些数据。自动运行不修改仓库 `.solve` 文件中的人工接受决定。
 
 **5-5 耗时较长：**现有乘法程序在本机一次完整运行中耗时 **53 分 16 秒**。启动器已使用游戏原生最快模式，并显示用例进度和已用时间；本分支尚未优化乘法算法。
 
@@ -32,7 +32,7 @@
 | --- | --- |
 | 桌面程序 | C#、.NET 框架（.NET Framework）、Windows 窗体（Windows Forms） |
 | 游戏桥接 | BepInEx 5.4.23.5 插件；已验证游戏版本为 Unity 2020.3.26f1c1 / Mono |
-| 求解器 | Python 3.14；便携包使用 CPython 3.14.0 |
+| 求解器 | Python 3.14；程序内置 CPython 3.14.0 |
 | 规则加载 | YAML、PyYAML 6.0.3 |
 | 本机通信 | 传输控制协议（TCP），回环地址 `127.0.0.1:17850`，每行一条 JavaScript 对象表示法（JSON）请求或响应 |
 | 题目与解答 | JSON 格式的 `.a2b` 输入和 `.solve` 状态 |
@@ -88,9 +88,7 @@ python a2bautosolver.py solve all --max-concurrency 3
 .\tools\build_autoplay.ps1 -GameDirectory 'D:\Game\Steam\steamapps\common\A2B' -Python 'python'
 ```
 
-构建脚本下载固定版本依赖，引用本机游戏库编译启动器和插件，再内嵌完整资源生成 `dist/A2B-Autoplay.exe`。程序不包含游戏程序集。构建缓存、二进制、实验和临时验证文档不提交到 Git。
-
-已通过调度、通信、候选与界面的定向检查，并完成若干关卡的真实游戏联调；Windows 扩展尚未新增完整 47 关回归。
+构建脚本下载固定版本依赖，引用本机游戏库编译启动器和插件，再内嵌完整资源生成 `dist/A2B_Assistant_v0.2.0.exe`。通过 `-Version` 参数可更改文件名和程序元数据中的版本号。程序不包含游戏程序集。构建缓存、二进制、实验和临时验证文档不提交到 Git。
 
 ## 许可证
 
