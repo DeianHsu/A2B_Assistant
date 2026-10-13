@@ -33,6 +33,7 @@ namespace A2BAutoplay
     public sealed class LauncherForm : Form
     {
         private readonly string root = AppDomain.CurrentDomain.BaseDirectory;
+        private readonly string dataRoot;
         private readonly string[] arguments;
         private readonly TextBox pathBox = new TextBox();
         private readonly ComboBox startMode = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 250 };
@@ -54,6 +55,8 @@ namespace A2BAutoplay
         public LauncherForm(string[] args)
         {
             arguments = args;
+            var configuredData = Environment.GetEnvironmentVariable("A2B_AUTOPLAY_DATA_DIRECTORY");
+            dataRoot = String.IsNullOrWhiteSpace(configuredData) ? root : Path.GetFullPath(configuredData);
             Text = "A=B 自动验证";
             ClientSize = new Size(920, 660);
             MinimumSize = new Size(760, 480);
@@ -91,6 +94,13 @@ namespace A2BAutoplay
             layout.Controls.Add(modeRow, 0, 1);
             var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill };
             foreach (var button in new[] { start, pause, stop }) { button.Size = new Size(140, 32); buttons.Controls.Add(button); }
+            var openData = new Button { Text = "打开备份和日志", Size = new Size(140, 32) };
+            openData.Click += delegate
+            {
+                Directory.CreateDirectory(dataRoot);
+                Process.Start(new ProcessStartInfo(dataRoot) { UseShellExecute = true });
+            };
+            buttons.Controls.Add(openData);
             start.Click += delegate { StartWork(); };
             pause.Click += delegate { paused = !paused; if (runner != null) runner.Pause(paused); pause.Text = paused ? "继续" : "暂停"; };
             stop.Click += delegate { if (cancellation != null) cancellation.Cancel(); status.Text = "正在停止，并返回关卡界面…"; };
@@ -166,9 +176,9 @@ namespace A2BAutoplay
             start.Enabled = false; pause.Enabled = false; stop.Enabled = true; pathBox.Enabled = false; startMode.Enabled = false;
             rowIndices.Clear(); grid.Rows.Clear(); detail.Clear();
             cancellation = new CancellationTokenSource();
-            Directory.CreateDirectory(Path.Combine(root, "logs"));
-            runLog = Path.Combine(root, "logs", "run-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + ".jsonl");
-            File.WriteAllText(Path.Combine(root, "settings.json"), new JavaScriptSerializer().Serialize(new { game_path = game, start_mode = (int)mode }), Encoding.UTF8);
+            Directory.CreateDirectory(Path.Combine(dataRoot, "logs"));
+            runLog = Path.Combine(dataRoot, "logs", "run-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + ".jsonl");
+            File.WriteAllText(Path.Combine(dataRoot, "settings.json"), new JavaScriptSerializer().Serialize(new { game_path = game, start_mode = (int)mode }), Encoding.UTF8);
             Task.Factory.StartNew(delegate
             {
                 try
@@ -226,7 +236,7 @@ namespace A2BAutoplay
         {
             var loader = Path.Combine(root, "payload", "loader");
             var dll = Path.Combine(root, "payload", "A2B.Autoplay.Bridge.dll");
-            if (!Directory.Exists(loader) || !File.Exists(dll)) throw new FileNotFoundException("程序资源不完整，请解压完整的发布包。");
+            if (!Directory.Exists(loader) || !File.Exists(dll)) throw new FileNotFoundException("程序资源不完整，请重新下载发布程序。");
             var installedLoader = Path.Combine(game, "BepInEx", "core", "BepInEx.dll");
             if (!File.Exists(installedLoader))
             {
@@ -240,7 +250,7 @@ namespace A2BAutoplay
         private void Backup(string game)
         {
             var source = Path.Combine(game, "A2B_Data", "save");
-            var destination = Path.Combine(root, "backups", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
+            var destination = Path.Combine(dataRoot, "backups", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
             if (Directory.Exists(source)) CopyDirectory(source, destination, false);
             Report("", "备份完成", destination);
         }
@@ -273,7 +283,7 @@ namespace A2BAutoplay
         private static string Quote(string value) { return "\"" + value.Replace("\"", "\\\"") + "\""; }
         private string FindGame()
         {
-            var settings = Path.Combine(root, "settings.json");
+            var settings = Path.Combine(dataRoot, "settings.json");
             if (File.Exists(settings))
             {
                 try

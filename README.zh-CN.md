@@ -1,146 +1,97 @@
-# A=B 自动求解器
+# A=B 自动求解与游戏验证
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+简体中文 | [English](README.md)
 
-本仓库是 [**A=B**](#致谢) 游戏全部六章、47 道谜题的自动求解器。它会为每道谜题生成真正的 A=B 程序；随仓库提供的 47 个解答均已通过穷尽式本地验证和原版游戏验证。
+自动生成 A=B 程序，并在原版游戏中验证。本仓库在[上游求解器](https://github.com/huangxs139/Game-A2B-auto-solver)基础上增加了 Windows 桌面启动器与游戏桥接插件。
 
-## 为什么会有这个项目？
+仓库包含六章 47 道题、126,626 组输入输出用例，以及上游所有者已验收的 47 份答案。
 
-我这颗上了年纪的脑袋还够用么？看来是不太够。
+## 快速使用：Windows 程序
 
-四年过去了，我居然还没打通整个游戏？实在忍不了。
+1. 从[发布版本（Releases）](https://github.com/DeianHsu/Game-A2B-auto-solver/releases/latest)获取单文件版 `A2B-Autoplay.exe`；旧版 ZIP 发布包仍需完整解压。
+2. 通过 Steam 安装 A=B，然后打开 `A2B-Autoplay.exe`。
+3. 选择起点，点击“开始自动验证”。仅打开程序不会自动运行。
 
-作为程序员我能怎么做？当然是做一个完全合法的~~作弊器~~**解题机**。
+单个程序文件已内嵌 Python、所需依赖和游戏插件。首次打开自动准备资源，后续复用缓存，无安装向导或手工解压步骤。启动器会查找游戏、部署插件并按需启动 A=B；首次部署时，如果游戏已运行且尚未加载插件，请先退出游戏。
 
-而且现在都 2026 年了，你懂的？我甚至不用自己写求解算法。
+| 起点 | 行为 |
+| --- | --- |
+| 从第一关开始 | 重新验证全部关卡，包括已通过关卡。 |
+| 从当前关开始 | 从游戏当前打开的关卡开始，重新验证当前关及其后所有关卡；点击开始前先在游戏中打开目标关卡。 |
+| 从首个未通过关卡开始 | 跳过已通过关卡，只处理剩余未通过关卡。 |
 
-伟大的Codex。现在这是你的活儿了。
+程序逐题获取答案、选关、填入代码、启动游戏验证，等待结果后返回选关界面。关卡失败时记录并继续下一关；插件断开或游戏退出时停止调度。支持暂停、恢复和停止。
 
-## 你想要什么？
+是否已通过以游戏存档为准，与求解器随包提供的已验收答案分开。资源缓存位于 `%LOCALAPPDATA%/A2B-Autoplay/runtime/`，设置、日志和存档备份独立保存在 `%LOCALAPPDATA%/A2B-Autoplay/data/`，可通过“打开备份和日志”按钮查看。更新程序保留这些数据，旧版便携目录的备份也不会被删除。自动运行不修改仓库 `.solve` 文件中的人工接受决定。
 
-### “我只想看答案”
+**5-5 耗时较长：**现有乘法程序在本机一次完整运行中耗时 **53 分 16 秒**。启动器已使用游戏原生最快模式，并显示用例进度和已用时间；本分支尚未优化乘法算法。
 
-没问题，懒是优点，不懒不会有本项目。
+## 技术栈
 
-请直接查看 [`user_docs/Verified-Answers-zh-CN.md`](user_docs/Verified-Answers-zh-CN.md) ([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Verified-Answers-zh-CN))。你可以轻松找到每一题的答案，均已验证过。（留心5-5可能需要跑15分钟，喝杯咖啡吧，别打断它）
+| 部分 | 实现 |
+| --- | --- |
+| 桌面程序 | C#、.NET 框架（.NET Framework）、Windows 窗体（Windows Forms） |
+| 游戏桥接 | BepInEx 5.4.23.5 插件；已验证游戏版本为 Unity 2020.3.26f1c1 / Mono |
+| 求解器 | Python 3.14；便携包使用 CPython 3.14.0 |
+| 规则加载 | YAML、PyYAML 6.0.3 |
+| 本机通信 | 传输控制协议（TCP），回环地址 `127.0.0.1:17850`，每行一条 JavaScript 对象表示法（JSON）请求或响应 |
+| 题目与解答 | JSON 格式的 `.a2b` 输入和 `.solve` 状态 |
+| 构建与分发 | PowerShell、.NET Framework C# 编译器、内嵌资源、压缩运行缓存、单文件 EXE |
 
-### “我想亲自让 Solver 受一遍折磨”
+## 整体实现
 
-很好。你可以清除随仓库提供的解答状态，让它重新求解全部 47 道谜题。先阅读[想自己运行？](#想自己运行)，再参阅完整指南 [`user_docs/Getting-Started-zh-CN.md`](user_docs/Getting-Started-zh-CN.md) ([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Getting-Started-zh-CN))。
-
-### “我想知道它是怎样解题的”
-
-与这份 README 不同，[`user_docs/Solving-Algorithms-zh-CN.md`](user_docs/Solving-Algorithms-zh-CN.md)([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Solving-Algorithms-zh-CN)) 会认真讲解：从 A=B 背后的搜索问题开始，随着六个章节逐渐复杂，介绍 Solver 的工具箱，逐步分析代表性谜题，并将全部 47 道谜题对应到求解它们的策略。阅读它可以理解的不只是产生了哪些答案，还能学会那些~~精妙~~能用的算法。
-
-### “我想阅读代码”
-
-如果你准备修改、扩展、审计或借鉴实现，请阅读 [`user_docs/Codebase-Guide-zh-CN.md`](user_docs/Codebase-Guide-zh-CN.md)([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Codebase-Guide-zh-CN))。它是开发者的代码指南：各项职责位于何处，一条命令如何流经 Manager、Solver 和 Executor，进程与数据如何通信，Rules 和持久化状态如何参与其中，以及测试套件如何组织。
-
-### “我发现了 Bug”
-
-请[提交 Issue](../../issues)。最好附上可复现的证据；通灵式调试暂不属于当前功能集。
-
-### “我还有别的话想说”
-
-欢迎通过[联系方式](#联系方式)联系我！
-
-## 正经的说，本项目在做什么？
-
-这不是一张硬编码答案表。
-
-对于每道谜题，Solver 会检查给定的输入/输出对，识别其中的变换类型，再用分章节策略和模板构造候选 A=B 程序。每个候选都会依据同一份机器可读游戏规则执行，并且必须为全部给定用例生成预期输出。最终候选在保存前还必须由 Manager 独立验证。
-
-简单地说，工作流如下：
-
-1. 看看谜题。
-2. 尝试一个 A=B 程序。
-3. 让 Executor 说“不行”。
-4. 换个更好的。
-5. 重复，直到所有用例通过。
-6. 保存程序，并在真实游戏中测试。
-
-最终结果是原生 A=B 代码，而不是用 Python 冒充答案。
-
-Solver 是专门为游戏中已知六章、47 道谜题这一封闭集合构建的。它是数据驱动、基于模板的合成器，而不是适用于任意未来 A=B 谜题的通用求解器。
-
-## 想自己运行？
-
-本项目以 Python 3.14 的 Linux 命令行应用形式开发和测试。Windows 用户可以通过 WSL2 或 Linux 虚拟机获得同类环境。
-
-仓库中已提交的 `.solve` 文件是我本人运行和测试后的结果，因此 Manager 会正确跳过它们。若要从零开始独立求解，需要先手动删除这些文件，使每道题回到未求解状态。此后生成的新 `.solve` 文件将成为你的本地解，你可自行审核。
-
-在本地检出目录中运行：
-
-```bash
-cd <path-to-your-cloned-repository-root>/   # 进入仓库根目录；目录名本身并不重要。
-python -m pip install -r requirements.txt
-rm -- test_output/*.solve                   # 删除已有接受状态，否则 Solver 会跳过这些谜题。
-
-# 自动求解完整的六章、47 道谜题。
-python a2bautosolver.py solve all
-
-# 以定向 Debug 模式求解一道谜题，在 'solve' 后传入完整标识符。
-# 可在 test_data/ 中查找标识符，其格式为 c{chapter_id}_{puzzle_id}_{puzzle_name}。
-python a2bautosolver.py solve c1_1_atob     # 以不持久化的定向模式强制运行 c1_1_atob。
+```mermaid
+flowchart LR
+    A[Windows 启动器] -->|本机 TCP / JSON| B[Unity 桥接插件]
+    A -->|复用答案或调用求解| C[Python 求解器]
+    C --> D[执行器与 YAML 规则]
+    B --> E[A=B 游戏]
+    E -->|验证结果| B
 ```
 
-并发、Debug 行为、报告大小、测试、输入/输出格式和所有者审核流程详见 [`user_docs/Getting-Started-zh-CN.md`](user_docs/Getting-Started-zh-CN.md)([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Getting-Started-zh-CN))。
+启动器优先读取已验收答案；缺少时调用现有 Python 求解器，并通过管理器（Manager）执行完整本地验证。求解器（Solver）从题目数据识别变换规律，使用分章节模板生成原生 A=B 程序，再由共享执行器（Executor）检验候选。
 
-## 它怎样求解 A=B？
+桥接插件在 Unity 主线程中执行选关、修改编辑器、运行与返回菜单操作。填入多行代码后等待布局更新，全部游戏用例完成后才报告成功。该本地接口由本项目提供。
 
-简短答案：并不存在一个神奇的万能算法。
+| 源码位置 | 职责 |
+| --- | --- |
+| `windows_autoplay/bootstrap/` | 准备内置资源、复用缓存并启动桌面程序 |
+| `windows_autoplay/launcher/` | 桌面界面、起点选择、顺序调度、备份和日志 |
+| `windows_autoplay/bridge/` | 游戏端接口与运行状态观察 |
+| `tools/autoplay_candidate.py` | 读取已验收答案，缺少时只读求解 |
+| `src/manager.py` | Python 调度、完整本地验证和候选保存 |
+| `src/solver.py`、`src/solver_framework.py` | 候选合成与提议、反馈循环 |
+| `src/executor.py`、`src/rules/` | A=B 执行语义与权威规则 |
+| `test_data/`、`test_output/` | 原始题目与已保存解答状态 |
 
-Solver 使用不断扩展的变换识别器和 A=B 程序模板工具箱。早期章节通常可用直接替换、映射、排序改写或计数模式处理；后续章节则需要标记符、类似有限状态转换器的多趟处理、辅助符号、有界搜索、借助中间表示完成的二进制算术，以及针对特定题目的构造。
+求解范围限定为现有六章题库。本地验证通过、游戏运行成功和项目所有者接受是不同的状态。
 
-候选解由题目数据生成，经过重复消除和行数限制筛选，在完整数据集上执行，并在持久化前接受独立验证。
+## 命令行求解
 
-更详细也更专业的算法解释请见 [`user_docs/Solving-Algorithms-zh-CN.md`](user_docs/Solving-Algorithms-zh-CN.md)([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Solving-Algorithms-zh-CN))。
+准备 Python 3.14，在仓库根目录运行：
 
-## 有意使用 AI 构建
+```bash
+python -m pip install -r requirements.txt
+python a2bautosolver.py solve c1_1_atob
+python a2bautosolver.py solve all --max-concurrency 3
+```
 
-这个项目还隐藏着第二项实验：它同时检验了一套从需求到最终审核的 AI 辅助软件工程工作流。
+指定单题须传入完整标识符，会强制定向调试且不覆盖解答状态。`solve all` 跳过已有候选且状态为 `pending`、`accepted` 或 `rejected` 的题目；缺少候选或状态为 `re-solve` 时才求解。因此，原样检出仓库会跳过随附的 47 份已接受解答。章节并发只影响 Python 求解器，游戏自动验证始终逐题执行。
 
-- **我**拥有项目，作出需求和架构决策，审核每项 Feature，在真实 A=B 游戏中测试候选，并作出全部最终接受决定。
-- **ChatGPT**协助讨论和完善需求、架构、开发计划及文档。
-- **Codex**实现 Rules、Executor、Solver、Manager、测试与修复，执行第一层测试和审核，并向所有者报告审核证据。
+仅查看答案可阅读[已验证答案](user_docs/Verified-Answers-zh-CN.md)。
 
-重点不只是让 AI 交付一堆代码。项目从头到尾使用了书面需求、受保护规范、Feature 边界、测试、审核和由所有者控制的接受流程。
+## 从源码构建 Windows 程序
 
-用于指导 Codex 的同一套需求、架构、路线图、Feature 规范、项目指令和机器可读 Rules 都包含在仓库内。如果你希望 Solver 采用不同的行为、支持自己的实验，或只是想看看这套流程能否经受新想法的考验，可以派生本项目并从这些文件继续，而不是从空白提示词开始。修改和再分发须遵守 [MIT License](LICENSE) 的适用范围。
+需要 64 位 Windows、已安装的 A=B、可用 Python，以及 .NET Framework C# 编译器：
 
-## 项目状态
+```powershell
+.\tools\build_autoplay.ps1 -GameDirectory 'D:\Game\Steam\steamapps\common\A2B' -Python 'python'
+```
 
-**已完成所含问题集。**
+构建脚本下载固定版本依赖，引用本机游戏库编译启动器和插件，再内嵌完整资源生成 `dist/A2B-Autoplay.exe`。程序不包含游戏程序集。构建缓存、二进制、实验和临时验证文档不提交到 Git。
 
-- 6 个章节
-- 47 道题
-- 47 份已提交的解答状态
-- 47 个经真实游戏验证、由我确认过的解答
-- 最终完整本地复验通过 126,626 个给定输入/输出用例
-- 文档基线下 48 项自动化测试通过
-
-谜题输入位于 [`test_data/`](test_data/)。便于复制的已接受程序位于 [`user_docs/Verified-Answers-zh-CN.md`](user_docs/Verified-Answers-zh-CN.md)([**Read in Wiki**](https://github.com/huangxs139/Game-A2B-auto-solver/wiki/Verified-Answers-zh-CN))；对应的 Solver 持久化状态和验证元数据仍位于 [`test_output/`](test_output/)。
-
-本地验证和真实游戏接受有意保持分离：程序能够证明候选符合全部给定用例，但只有人可以确认解能否成功通过原版游戏。
-
-## Issue
-
-若遇到可复现 Bug、错误行为或文档问题，请[提交 Issue](../../issues)。
-
-## 联系方式
-
-- **个人邮箱：** [huangxs139@gmail.com](mailto:huangxs139@gmail.com)
-- **工作邮箱：** [stevenwong.work.275@gmail.com](mailto:stevenwong.work.275@gmail.com)
-- **商务联系：** [business-contact@megazero.cn](mailto:business-contact@megazero.cn)
-
-## 致谢
-
-**A=B** 是 Artless Games 制作的编程解谜游戏，唯一指令是 `A=B`，意为“将 A 替换为 B”。这个极简的语言必须解决从字母大写转换到二进制乘法的问题，而且最好使用尽可能少的行数。
-
-原版游戏可在其[官方 Steam 商店页面](https://store.steampowered.com/app/1720850/AB/)找到。
-
-这是一个独立实验项目。A=B 及其原始游戏材料归各自的创作者或权利人所有。
+已通过调度、通信、候选与界面的定向检查，并完成若干关卡的真实游戏联调；Windows 扩展尚未新增完整 47 关回归。
 
 ## 许可证
 
-本项目原创的源代码和文档采用 [MIT License](LICENSE)。该许可证不授予对 A=B，或 Artless Games 及其他相关权利人拥有的游戏衍生材料的任何权利。
+采用 [MIT 许可证（MIT License）](LICENSE)，保留上游版权声明，并追加 DeianHsu 的新增贡献声明。第三方组件遵循各自许可证。项目的 MIT 许可不授予 A=B 游戏本体及 Artless Games 或其他权利人拥有的游戏衍生材料的权利。
