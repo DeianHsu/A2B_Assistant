@@ -161,3 +161,12 @@ cython_debug/
 
 # Codex Configurations
 .codex/
+
+# 本地自动验证的实验、测试、文档与打包产物
+/build/
+/dist/
+/docs/features/FEAT0007.md
+/tests/test_autoplay_candidate.py
+/windows_autoplay/tests/
+/windows_autoplay/*.md
+/reports/*.report.*
